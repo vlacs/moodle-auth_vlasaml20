@@ -87,6 +87,9 @@ class vlasaml20 {
                 throw new Exception("Unable to create dir: $path");
             }
         }
+        $keys = "{$CFG->dataroot}/vlasaml20/keys";
+        $pubkey = "$keys/rsapubkey.der";
+        $privkey = "$keys/rsaprivkey.pem";
         $file = "$path/".sha1($response . time()).'.xml';
         if(file_exists($file)) {
             unlink($file);
@@ -94,7 +97,7 @@ class vlasaml20 {
         file_put_contents($file, $response);
 
         // Do some xmlsec1 stuff to it.
-        exec(self::$xmlsec1." --verify $file", $output, $return);
+        exec(self::$xmlsec1." --verify --privkey-pem {$privkey} --pubkey-der {$pubkey} $file", $output, $return);
         // dump the file.
         unlink($file);
         if($return) {
