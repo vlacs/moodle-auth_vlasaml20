@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<samlp:AuthnRequest
+  xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+  ID="{REQUEST_ID}"
+  Version="2.0"
+  IssueInstant="{ISSUE_INSTANT}"
+  ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+  ProviderName="{PROVIDER}"
+  IsPassive="false"
+  AssertionConsumerServiceURL="{ACS_URL}">
+<saml:Issuer
+  xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">{ISSUER}</saml:Issuer>
+<samlp:NameIDPolicy
+  AllowCreate="true"
+  Format="vlacs:sis_user_idstr" />
+</samlp:AuthnRequest>
+
