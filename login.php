@@ -12,7 +12,7 @@ if(!$response = optional_param('SAMLResponse', false, PARAM_RAW)) {
     if(!$wantsurl) {
         $wantsurl = $CFG->wwwroot;
     }
-    $url = 'https://portaltest1.vlacs.org/idp/saml20?RelayState='.urlencode($wantsurl);
+    $url = 'https://go.vlacs.org/idp/saml20?RelayState='.urlencode($wantsurl);
     $url .= "&SAMLRequest={$encoded_saml}";
 
     redirect($url);
