@@ -1,0 +1,2 @@
+Dependencies:
+    * /usr/bin/xmlsec1 (this implies that this works only on Linux)
