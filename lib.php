@@ -1,5 +1,7 @@
 <?php
 
+require_once(dirname(__FILE__) . '/xmlseclibs.php');
+
 class vlasaml20 {
 
     private static $xmlsec1 = "/usr/bin/xmlsec1";
@@ -76,11 +78,51 @@ class vlasaml20 {
         return $infmsg;
     }
 
+    public static function xmlsig_verify($xml_path, $cert_path, $throw_errors=true) {
+        $doc = new DOMDocument();
+        $doc->load($xml_path);
+        $xmlsecdsig = new XMLSecurityDSig();
+        $dsig = $xmlsecdsig->locateSignature($doc);
+        if (!$xmlsecdsig) {
+            if($throw_errors) {
+                error("Cannot locate signature node in response xml.");
+            }
+            return false;
+        }
+
+        $xmlsecdsig->canonicalizeSignedInfo();
+        $xmlsecdsig->idKeys = array('wsu:Id');
+        $xmlsecdsig->idNS = array('wsu'=>'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd');
+
+        if(!$xmlsecdsig->validateReference()) {
+            if($throw_errors) {
+                error('XML reference validation failed.');
+            }
+            return false;
+        }
+
+        $obj_key = $xmlsecdsig->locateKey();
+        if (!$obj_key) {
+            if($throw_errors) {
+                error("Unable to locate dsig key in xml file.");
+            }
+            return false;
+        }
+
+        $key = null;
+
+        // We will hold on to this. For now we're just going to use our key but 
+        // in the future we may want to match key info before attempting to 
+        // verify.
+        //$obj_key_info = XMLSecEnc::staticLocateKeyInfo($obj_key, $xmlsecdsig);
+        $obj_key->loadKey($cert_path, true);
+
+        return $xmlsecdsig->verify($obj_key);
+    }
+
     public static function process_response($response) {
         global $CFG;
         $response = stripslashes($response);
-        // Check signature using xmlsec1 (ewww, but no choice.)
-        // TODO!!
         $path = "{$CFG->dataroot}/vlasaml20";
         if(!is_dir($path)) {
             if(!mkdir($path)) {
@@ -88,20 +130,18 @@ class vlasaml20 {
             }
         }
         $keys = "{$CFG->dataroot}/vlasaml20/keys";
-        $pubkey = "$keys/rsapubkey.der";
-        $privkey = "$keys/rsaprivkey.pem";
+        $cert = "$keys/publickey.crt";
         $file = "$path/".sha1($response . time()).'.xml';
         if(file_exists($file)) {
             unlink($file);
         }
         file_put_contents($file, $response);
 
-        // Do some xmlsec1 stuff to it.
-        exec(self::$xmlsec1." --verify --privkey-pem {$privkey} --pubkey-der {$pubkey} $file", $output, $return);
-        // dump the file.
+        $return = self::xmlsig_verify($file, $cert);
         unlink($file);
-        if($return) {
-            error("(xmlsec1): XML Signature does not verify (bad xmlsig.)");
+
+        if(!$return) {
+            error("(xmlseclibs): XML Signature does not verify (bad xmldsig.)");
         }
 
         // Parse the XML and get the info we need.
