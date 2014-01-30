@@ -12,6 +12,6 @@
   xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">{ISSUER}</saml:Issuer>
 <samlp:NameIDPolicy
   AllowCreate="true"
-  Format="vlacs:sis_user_idstr" />
+  Format="{NAME_ID_FORMAT}" />
 </samlp:AuthnRequest>
 

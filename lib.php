@@ -32,6 +32,12 @@ class vlasaml20 {
         return delete_records_select('vlasaml20', 'timeinvalid < ' . time());
     }
 
+    public static function xml_template($params, $xml) {
+        foreach($params as $name => $value) {
+
+        }
+    }
+
     public static function get_authnrequest() {
         global $CFG;
         $request_id = self::create_id();
@@ -51,12 +57,21 @@ class vlasaml20 {
         if(!insert_record('vlasaml20', $request_record)) {
             error("Unable to insert into vlasaml20.");
         }
+
         // Get template for authnrequest and subsitute values in.
-        $xml = str_replace('{REQUEST_ID}', $request_id, $xml);
-        $xml = str_replace('{ISSUE_INSTANT}', self::get_date_time(time()), $xml);
-        $xml = str_replace('{ACS_URL}', "$CFG->wwwroot/auth/vlasaml20/login.php", $xml);
-        $xml = str_replace('{PROVIDER}', preg_replace('/(http|https):\/\//', '', $CFG->wwwroot), $xml);
-        $xml = str_replace('{ISSUER}', preg_replace('/(http|https):\/\//', '', $CFG->wwwroot), $xml);
+        $params = array(
+            'REQUEST_ID' => $request_id,
+            'ISSUE_INSTANT' => self::get_date_time(time()),
+            'ACS_URL' => "$CFG->wwwroot/auth/vlasaml20/login.php",
+            'PROVIDER' => preg_replace('/(http|https):\/\//', '', $CFG->wwwroot),
+            'ISSUER' => preg_replace('/(http|https):\/\//', '', $CFG->wwwroot),
+            'NAME_ID_FORMAT' => 'vlacs:sis_user_idstr'
+        );
+
+        $wrapstring = function($i) { return "\{{$name}\}"; };
+        foreach($params as $name => $val) {
+            $xml = str_replace($wrapstring($name), $val, $xml);
+        }
 
         return $xml;
     }
